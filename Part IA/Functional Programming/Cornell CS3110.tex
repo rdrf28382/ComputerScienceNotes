@@ -1,0 +1,287 @@
+\documentclass[12pt,a4paper]{article} % uncomment, if revtex is not installed
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{enumitem}
+\usepackage{color}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage{wasysym}
+\usepackage{natbib}
+\usepackage{fixmath}
+\usepackage{comment}
+\usepackage{fancyhdr}
+\usepackage{pgfplots}
+\usepackage{listings}
+\pagestyle{fancyplain}
+\usepackage{graphicx}
+\graphicspath{ {./} }
+\fancyhf{}
+\setlength{\parindent}{0in}
+\lstset{
+tabsize = 4, %% set tab space width
+showstringspaces = false, %% prevent space marking in strings, string is defined as the text that is generally printed directly to the console
+numbers = left, %% display line numbers on the left
+commentstyle = \color[rgb]{0,0.5,0}, %% set comment color
+keywordstyle = \color{blue}, %% set keyword color
+stringstyle = \color{red}, %% set string color
+rulecolor = \color{black}, %% set frame color to avoid being affected by text color
+basicstyle = \small \ttfamily , %% set listing font and size
+breaklines = true, %% enable line breaking
+numberstyle = \tiny,
+}
+\lhead{ \fancyplain{}{Ivin Lee, il315@cam.ac.uk} }
+\rhead{ \fancyplain{}{NST Math 2016}}
+\cfoot{ \fancyplain{}{\thepage{}} }
+
+\newcommand{\snt}[1]{\textcolor{magenta}{#1}} % edited by Sergei 
+\newcommand{\crsid}[1]{\textcolor{red}{#1}} % edited by crsid
+\newcommand{\sntdel}[1]{\textcolor{green}{\sout{#1}}} % deleted by Sergei
+
+\newcommand{\problem}[1]{\subsection*{#1}
+\setcounter{equation}{0}}
+\newcommand{\question}[1]{\problem{Q. #1}}
+\newcommand{\pproblem}[1]{\subsubsection*{(#1)}}
+\author{Ivin Lee}
+\title{Cornell CS 3110 - Functional Programming}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\maketitle
+No, I'm not from Cornell. But I think this set of lectures on OCaml is really useful for learning functional programming, which is why I am including it in these notes.
+\section{Introduction}
+\textbf{Functional languages: }
+\begin{itemize}
+	\item define computations as mathematical functions
+	\item avoid mutable states
+\end{itemize}
+The former means that every computation takes in values and outputs values (more on this later).
+\\\\
+The latter means that you never write $x = x + 1$, because when you do so you are changing (muting) the value of x.
+\\\\
+\textbf{Imperative languages:}
+\begin{itemize}
+	\item mutable states
+	\item functions have side effects
+\end{itemize}
+The latter means that in
+\begin{lstlisting}[language = Java]
+int addValue(Wallet wallet, int change) {
+	wallet.money += change;
+	return wallet.money;
+}
+\end{lstlisting}
+apart from returning the new value of the wallet, it also changes the value in the Wallet instance.
+\\\\
+It is claimed that functional programming allows one to write correct code easier, because:
+\begin{itemize}
+	\item variables never change values
+	\item functions never change other things (and cause trouble!)
+\end{itemize}
+It is possible to write code following the functional programming paradigm in any programming language, but some languages have been designed to make this easier. e.g.OCaml
+\\\\
+Benefits of OCaml:
+\begin{enumerate}
+	\item Immutable programming inbuilt (can't accidentally re-write a variable after being declared)
+	\item Functions passed as values
+	\item \textbf{Automatic type inference} - quite useful from experience
+\end{enumerate}
+\section{Functions}
+\textbf{Value} - expression that does not need any further evaluation
+\begin{lstlisting}[language = Caml]
+let x = if e1 then e2 else e3
+let y = e2 +. e3
+\end{lstlisting}
+There is no need to declare the type as the type is inferred from e2 and e3 (e.g. if e2 and e3 are ints, then the type of x is inferred to be int).
+\\\\
+The $+.$ is a binary infix operator that takes in two floats and returns a float. In order for the type of y to be inferred correctly, it is necessary to use the operator, which tells the compiler(?) the return type of this expression.
+\\\\
+\textbf{Function Definitions}
+\begin{lstlisting}[language = Caml]
+let rec pow x y = 
+	if y = 0 then 1
+	else x * pow x (y - 1)
+\end{lstlisting}
+Note that you don't put brackets around the arguments. Also, all functions only return one thing, which matches the mathematical definition of a function.
+\begin{lstlisting}[language = Caml]
+let rec f x1 x2 ... xn = e
+val f : t1 -> t2 -> ... tn -> te
+\end{lstlisting}
+The second line is output in the command line. Type $t -> u$ is the type of a function that takes an input of type t and returns an output of type u.
+\\\\
+\textbf{Anonymous Functions}
+\begin{lstlisting}[language = Caml]
+fun x -> x + 1
+let inc = fun x -> x = 1
+\end{lstlisting}
+Can be used when you don't need the function to have a name, e.g. defining the function in another function's argument like in
+\begin{lstlisting}[language = Caml]
+let f x y = 
+  x + y
+f ((fun x -> x + 1) 2) 3 (* returns 6*)
+\end{lstlisting}
+A function is a value. In the above example, $ x+1 $ is not evaluated until $ 2$ was passed to the anonymous function.
+\\\\
+Note that the anonymous expression syntax is analogous to lambda expressions in math:
+\begin{align*}
+	\lambda x.e\\
+	\text{fun }x -> e
+\end{align*}
+\textbf{Function Application Operator}
+\begin{lstlisting}[language = Caml]
+f e (*equivalent to*) e |> f
+5 |> inc |> square
+\end{lstlisting}
+5 is passed to inc and square
+\\\\
+\textbf{Functions are Values}
+
+Implication: functions can take functions as arguments and can return functions as results
+\section{Lists}
+Lists are constructed recursively, so the following constructors are equivalent
+\begin{lstlisting}[language=Caml]
+let x = [1;2;3]
+let x = 1::[2;3]
+let x = 1::2::[3]
+let x = 1::2::3::[]
+let x = h::t (* h: head, t: tail)
+\end{lstlisting}
+The type of x is a' list, where a' is the type of the elements in the tail of the list (note: the type of h is a' but the type of t is a' list!)
+\\\\
+\textbf{Pattern Matching}
+\begin{lstlisting}[language=Caml]
+let f inputList = 
+	match inputList with
+	|[] -> -1
+	|h::t -> h
+\end{lstlisting}
+Basically pattern matching allows you to look at the first element of the list, and if that doesn't satisfy you, you can recurse and look at the first element of the tail list.
+\\\\
+\textbf{Linked List}
+
+As expected, the linked list data structure is good for sequential access.
+\\\\
+\textbf{Function Keyword}
+Another way to write this is:
+\begin{lstlisting}[language=Caml]
+let f = function
+	|[] -> -1
+	|h::t -> h
+\end{lstlisting}
+This function takes in one argument, matches the argument to a pattern and returns the corresponding value. The main difference is that using \verb|match ... with| can take multiple inputs but \verb|function| only takes in one input.
+\\\\
+\textbf{Patterns}
+\begin{lstlisting}[language=Caml]
+a::[] (*matches lists with 1 element*)
+a::b::[] (*matches all lists with 2 elements*)
+x (*matches anything that has a value*)
+_ (*matches everything*)
+\end{lstlisting}
+\textbf{Pattern Matching Warnings}
+
+Not all cases considered: inexhaustive pattern-match warning
+
+Duplicated cases: unused match case warning
+\section{Let Expressions}
+Let definitions have been used until now
+\begin{lstlisting}[language=Caml]
+let x = 2 in x + x
+\end{lstlisting}
+This returns the value $ x+x$ so this statement is an expression
+\begin{lstlisting}[language=Caml]
+let x = 2 in x = 1
+(fun x -> x + 1) 2
+\end{lstlisting}
+These two equations are the same. Basically all these expressions are secretly functions!
+\\\\
+\textbf{Variant}
+\begin{lstlisting}[language=Caml]
+type day = Sun | Mon | Tue | Wed | Thu | Fri | Sat
+let int_of_day d = 
+	match d with
+	|Sun -> 1
+	|Mon -> 2
+	|Tue -> 3
+	|Wed -> 4
+	|Thu -> 5
+	|Fri -> 6
+	|Sat -> 7
+\end{lstlisting}
+Each of the Sun/Mon/Tues are called constructors, which are already a value
+\\\\
+\textbf{Records}
+
+Need to define a record type for type inference
+\begin{lstlisting}[language=Caml]
+type contact = {name: string; hp: int}
+let nick = {name="Nick"; hp=81234567}
+nick.name (*returns "Nick"*)
+let get_hp m = 
+	match m with
+	| {name=_; hp = h} -> h
+let get_hp m = 
+	match m with 
+	|{name; hp} -> hp
+let get_hp m = 
+	match m with 
+	|{hp} -> hp
+let get_hp m = m.hp
+\end{lstlisting}
+All the functions are the same, check if you understand how this pattern matching works!
+\\\\\
+\textbf{Tuples}
+\begin{lstlisting}[language=Caml]
+(1,2,10) : int*int*int
+(true, "Hello") : bool*string
+([1;2;3], (0.5, 'X')) : int list * (float*char)
+let f t = 
+	match t with
+	| (x, y, z) -> z
+let f t = 
+	let (x, y, z) = t in z
+let f t = 
+	let (_, _, z) = t in z
+let f (_, _, z) = z
+f (1, 2, 3) = 3
+\end{lstlisting}
+\textbf{Extended Syntax for Let}
+
+Previously x was used as a variable, but actually any pattern will work
+\begin{lstlisting}[language=Caml]
+let x = e1 in e2
+let rec f x1 ... xn = e1 in e2
+\end{lstlisting}
+so replacing all the x's with patterns will work as well
+\begin{lstlisting}[language=Caml]
+let add t = 
+	let (x, y, z) = t
+	in x + y + z
+let add (x, y, z) = x + y + z
+\end{lstlisting}
+There are built-in functions for accessing first and second element of a tuple (not sure why you need it...)
+\begin{lstlisting}[language=Caml]
+let fst (x, _) = x
+let snd (_, y) = y
+\end{lstlisting}
+\textbf{Type synonyms}
+
+Can define types so you don't have to type float list list for matrix etc
+\begin{lstlisting}[language=Caml]
+type point = float * float
+type vector = float list
+type matrix = float list list
+\end{lstlisting}
+Of course, you will have to specify the type because the compiler isn't smart enough to read your mind!
+\begin{lstlisting}[language=Caml]
+type point = float * float
+let f x : point =
+  let y = x +. x in
+  (y, y)
+ (* if : point is not written, the type of f will be float -> float*float instead of float -> point!*)
+\end{lstlisting}
+\textbf{Back to variants}
+
+Recall: variants are enumerated sets of values
+\end{document}
